@@ -10,7 +10,7 @@ License: BSD
 
 """
 
-from redis_wrap import * 
+from redis_wrap import get_redis, get_hash, get_set
 
 def create_user(id_attr = None, **kwargs):
     """
