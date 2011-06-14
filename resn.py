@@ -81,6 +81,30 @@ def delete_connection(user1, user2):
     u2 = get_numeric_user_id(user2)
     delete_connection_by_ids(u1, u2)
 
+#~~~~Followers and Following~~~~
+
+
+def follow_by_ids(follower, followee):
+    following = get_set("users.%s.following" % follower)
+    following.add(followee)
+    followers = get_set("users.%s.followers" % followee)
+    followers.add(follower)
+
+def follow(follower, followee):
+    fr = get_numeric_user_id(follower)
+    fe = get_numeric_user_id(followee)
+    follow_by_ids(fr, fe)
+
+def unfollow_by_ids(follower, followee):
+    following = get_set("users.%s.following" % follower)
+    following.remove(followee)
+    followers = get_set("users.%s.followers" % followee)
+    followers.remove(follower)
+    
+def follow(follower, followee):
+    fr = get_numeric_user_id(follower)
+    fe = get_numeric_user_id(followee)
+    unfollow_by_ids(fr, fe)
 
 
 #~~~~Updates and Feed~~~~
@@ -98,7 +122,7 @@ def new_update(user, **update):
     for key in update:
         upd = update[key]
 
-    friends = get_set("users.%s.friends" % user)
+    friends = get_redis().sunion("users.%s.friends" % user, "users.%s.followers" % user)
     for friend in friends:
         get_redis().lpush("users.%s.feed" % friend, ctr)
         get_redis().ltrim("users.%s.feed" % friend, 0, 1000) #TODO: Change hardcoded limit 1000 to a setting.
