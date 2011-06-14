@@ -11,6 +11,10 @@ License: BSD
 """
 
 from redis_wrap import get_redis, get_hash, get_set
+import random
+
+
+#~~~~Users and Friends~~~~
 
 def create_user(id_attr, **kwargs):
     """
@@ -48,7 +52,7 @@ def get_user(user):
     """
     Returns an editable dictionary like wrapper based on the attribute set in 'id_attr'
     """
-    return get_hash('users.id.' + user)
+    return get_hash('users.' + get_numeric_user_id(user))
 
 def create_connection_by_ids(user1, user2):
     """Creates a 'friendship' between two users. Uses internal numeric ids"""
@@ -76,6 +80,12 @@ def delete_connection(user1, user2):
     u1 = get_numeric_user_id(user1)
     u2 = get_numeric_user_id(user2)
     delete_connection_by_ids(u1, u2)
+
+
+
+#~~~~Updates and Feed~~~~
+
+
 
 def new_update(user, **update):
     """Creates a new update object and pushes the update to the feeds of the user's friends and followers.
@@ -114,3 +124,40 @@ def get_feed(user, limit = 1000):
 def get_user_updates(user, limit = 1000):
     """Returns a list of updates by the user. Useful for generating a user profile."""
     return get_updates_from_list(get_redis.lrange("users.%s.updates" % user, 0, limit))
+
+
+
+
+#~~~~Authentication~~~~
+
+
+
+def generate_auth_token():
+    return ''.join(random.choice('1234567890abcdef') for i in range(25))
+
+def check_password(username, password, password_field = 'password'):
+    """
+    password_field is the name of the field in 'create_user' that represents the password.
+    It is advisable to store and check against a hash of the password rather than the password itself.
+    """
+    user = get_hash('users.%s' % get_numeric_user_id(username))
+    if not user:
+        return False
+    return user[password_field] == password
+
+def login_user(username):
+    """Call this function after check_password passes. It generates an auth token that can be stored in a cookie to store a user session."""
+    token = generate_auth_token()
+    user = get_user(username)
+    user['auth'] = token
+    get_redis().set("auth.%s" % token, str(get_numeric_user_id(username)))
+    get_redis().expire("auth.%s" % token, 3600 * 72) #Token expires in 72 hours
+    return token
+    
+def validate_token(token):
+    """ Validates the token stored in a cookie """
+    user_id = get_redis().get("auth.%s" % token)
+    user = get_hash("users.%s" % user_id)
+    if not len(user):
+        return False
+    return user['auth'] == token
