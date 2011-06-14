@@ -30,6 +30,16 @@ def create_user(id_attr, **kwargs):
         get_redis().set("users.id.%s" % kwargs[id_attr], ctr)
         user['id'] = kwargs[id_attr]
 
+def get_numeric_user_id(username):
+    return get_redis.get("users.id.%s" % username)
+
+def delete_user(user):
+    """ Deletes the user and removes all friendships """
+    friends = get_set("users.%s.friends" % user)
+    for friend in friends:
+        get_set("users.%s.friends" % friend).remove(user)
+    get_redis().delete("users.%s" % user)
+
 def get_user_by_id(user_id):
     """Returns an editable dictionary like wrapper of a user by numeric id"""
     return get_hash('users.' + user_id)
@@ -47,12 +57,26 @@ def create_connection_by_ids(user1, user2):
     u1.add(user2)
     u2.add(user1)
 
+def delete_connection_by_ids(user1, user2):
+    """Deletes a 'friendship' between two users. Uses internal numeric ids"""
+    u1 = get_set('users.%s.friends' % user1)
+    u2 = get_set('users.%s.friends' % user2)
+    u1.remove(user2)
+    u2.remove(user1)
+
+
 def create_connection(user1, user2):
     """Creates a 'friendship' between two users, parameters are the values of the 'id_attr' set in 'create_user'"""
-    u1 = get_redis().get('users.id.' + user1)
-    u2 = get_redis().get('users.id.' + user2)
+    u1 = get_numeric_user_id(user1)
+    u2 = get_numeric_user_id(user2)
     create_connection_by_ids(u1, u2)
     
+def delete_connection(user1, user2):
+    """Deletes a 'friendship' between two users, parameters are the values of the 'id_attr' set in 'create_user'"""
+    u1 = get_numeric_user_id(user1)
+    u2 = get_numeric_user_id(user2)
+    delete_connection_by_ids(u1, u2)
+
 def new_update(user, **update):
     """Creates a new update object and pushes the update to the feeds of the user's friends and followers.
     The parameter 'user' is the numeric id of the user"""
@@ -90,5 +114,3 @@ def get_feed(user, limit = 1000):
 def get_user_updates(user, limit = 1000):
     """Returns a list of updates by the user. Useful for generating a user profile."""
     return get_updates_from_list(get_redis.lrange("users.%s.updates" % user, 0, limit))
-
-        
