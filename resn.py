@@ -16,6 +16,7 @@ import random
 
 #~~~~Users and Friends~~~~
 
+
 def create_user(id_attr, **kwargs):
     """
     Creates a new user with attributes specified as keyword arguments
@@ -81,27 +82,33 @@ def delete_connection(user1, user2):
     u2 = get_numeric_user_id(user2)
     delete_connection_by_ids(u1, u2)
 
+
 #~~~~Followers and Following~~~~
 
 
+
 def follow_by_ids(follower, followee):
+    """Creates an asymmetric connection between two users. Uses internal numeric ids"""
     following = get_set("users.%s.following" % follower)
     following.add(followee)
     followers = get_set("users.%s.followers" % followee)
     followers.add(follower)
 
 def follow(follower, followee):
+    """Creates an asymmetric connection between two users. """
     fr = get_numeric_user_id(follower)
     fe = get_numeric_user_id(followee)
     follow_by_ids(fr, fe)
 
 def unfollow_by_ids(follower, followee):
+    """Deletes an asymmetric connection between two users. Uses internal numeric ids"""
     following = get_set("users.%s.following" % follower)
     following.remove(followee)
     followers = get_set("users.%s.followers" % followee)
     followers.remove(follower)
     
 def follow(follower, followee):
+    """Deletes an asymmetric connection between two users. """
     fr = get_numeric_user_id(follower)
     fe = get_numeric_user_id(followee)
     unfollow_by_ids(fr, fe)
@@ -175,9 +182,15 @@ def login_user(username):
     user = get_user(username)
     user['auth'] = token
     get_redis().set("auth.%s" % token, str(get_numeric_user_id(username)))
-    get_redis().expire("auth.%s" % token, 3600 * 72) #Token expires in 72 hours
+    get_redis().expire("auth.%s" % token, 3600 * 72) #Token expires in 72 hours, TODO: Move to settings.
     return token
-    
+
+def logout_user(username):
+    """Clears the auth tokens."""
+    user = get_user(username)
+    del user['auth'] 
+    get_redis().delete("auth.%s" % token)
+
 def validate_token(token):
     """ Validates the token stored in a cookie """
     user_id = get_redis().get("auth.%s" % token)
