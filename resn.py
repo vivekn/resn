@@ -36,7 +36,7 @@ def create_user(id_attr, **kwargs):
         user['id'] = kwargs[id_attr]
 
 def get_numeric_user_id(username):
-    return get_redis.get("users.id.%s" % username)
+    return get_redis().get("users.id.%s" % username)
 
 def delete_user(user):
     """ Deletes the user and removes all friendships """
@@ -82,6 +82,14 @@ def delete_connection(user1, user2):
     u2 = get_numeric_user_id(user2)
     delete_connection_by_ids(u1, u2)
 
+def extract(iterable):
+    return (get_user_by_id(user)['id'] for user in iterable)
+
+
+def get_friend_list(user):
+    """Returns a list of the user's friends"""
+    user = get_numeric_user_id(user)
+    return extract(get_set("users.%s.friends" % user))
 
 #~~~~Followers and Following~~~~
 
@@ -107,27 +115,39 @@ def unfollow_by_ids(follower, followee):
     followers = get_set("users.%s.followers" % followee)
     followers.remove(follower)
     
-def follow(follower, followee):
+def unfollow(follower, followee):
     """Deletes an asymmetric connection between two users. """
     fr = get_numeric_user_id(follower)
     fe = get_numeric_user_id(followee)
     unfollow_by_ids(fr, fe)
+
+def get_followers_list(user):
+    """Returns a list of the user's followers"""
+    user = get_numeric_user_id(user)
+    return extract(get_set("users.%s.followers" % user))
+
+def get_following_list(user):
+    """Returns a list of the users the user is following"""
+    user = get_numeric_user_id(user)
+    return extract( get_set("users.%s.following" % user) )
+
 
 
 #~~~~Updates and Feed~~~~
 
 
 
-def new_update(user, **update):
-    """Creates a new update object and pushes the update to the feeds of the user's friends and followers.
-    The parameter 'user' is the numeric id of the user"""
+
+def new_update(username, **update):
+    """Creates a new update object and pushes the update to the feeds of the user's friends and followers."""
+    user = get_numeric_user_id(username)
 
     get_redis().incr("updates.counter")
     ctr = get_redis().get("updates.counter")
     upd = get_hash("updates." + ctr)
     upd['user'] = user
     for key in update:
-        upd = update[key]
+        upd[key] = update[key]
 
     friends = get_redis().sunion("users.%s.friends" % user, "users.%s.followers" % user)
     for friend in friends:
@@ -141,21 +161,23 @@ def delete_update(update_id):
     get_redis().delete("updates." + update_id)
 
 def get_updates_from_list(feed):
-    """ Performs existence checks on updates """
+    """ Retrieve updates from their ids """
     newfeed = []
-    for update in feed:
+    for item in feed:
+        update = get_hash('updates.%s' % item)
         if len(update):
             newfeed.append(update)
     return newfeed
 
-def get_feed(user, limit = 1000):
+def get_feed(username, limit = 1000):
     """Returns the feed containing updates by friends"""
-    return get_updates_from_list(get_redis.lrange("users.%s.feed" % user, 0, limit))
+    user = get_numeric_user_id(username)
+    return get_updates_from_list(get_redis().lrange("users.%s.feed" % user, 0, limit))
 
-def get_user_updates(user, limit = 1000):
+def get_user_updates(username, limit = 1000):
     """Returns a list of updates by the user. Useful for generating a user profile."""
-    return get_updates_from_list(get_redis.lrange("users.%s.updates" % user, 0, limit))
-
+    user = get_numeric_user_id(username)
+    return get_updates_from_list(get_redis().lrange("users.%s.updates" % user, 0, limit))
 
 
 
@@ -188,8 +210,9 @@ def login_user(username):
 def logout_user(username):
     """Clears the auth tokens."""
     user = get_user(username)
-    del user['auth'] 
+    token = user['auth']
     get_redis().delete("auth.%s" % token)
+    del user['auth'] 
 
 def validate_token(token):
     """ Validates the token stored in a cookie """
