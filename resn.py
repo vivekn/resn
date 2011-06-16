@@ -10,8 +10,15 @@ License: BSD
 
 """
 
-from redis_wrap import get_redis, get_hash, get_set
+from redis_wrap import get_redis, get_hash, get_set, setup_system
 import random
+
+
+resn_settings = {
+    'Feed Size': 1000, # Maximum number of messages in a user's feed
+    'Token Validity': 72 * 3600, # Time in seconds before a token expires.
+}
+
 
 
 #~~~~Users and Friends~~~~
