@@ -3,6 +3,7 @@ resn
 resn (REdis Social Network) is a simple library to create social networks. It provides a backend for data models using Redis, supporting friends, followers, updates and a news feed out of the box. You can use it with any web framework like Django, Flask, Pylons etc. For examples see the file **tests.py**. 
 
 Requires:
+
 * Latest version of [redis-py](http://github.com/andymccurdy/redis-py)
 * Latest version of [redis_wrap](http://github.com/amix/redis_wrap)
 
@@ -11,11 +12,11 @@ License: BSD, see LICENSE for more info.
 
 Installation
 ====
-First install redis_py and redis_wrap if you haven't already
+First install redis_py and redis_wrap if you haven't already:
     $ easy_install redis
     $ easy_install resis_wrap
 
-Then install resn
+Then install resn:
     $ easy_install resn
 
 
@@ -36,46 +37,45 @@ API Reference
 
 Users and Friends
 ------
-'''' python
-	create_user(id_attr, **kwargs):
+    create_user(id_attr, **kwargs):
 	    """
 	    Creates a new user with attributes specified as keyword arguments
 
 	    'id_attr' is the name of the attribute that will uniquely identify the user.
 	    """
 	   
-	get_numeric_user_id(username)
+    get_numeric_user_id(username)
 
-	delete_user(user):
+    delete_user(user):
 	    """ Deletes the user and removes all friendships """
 	   
-	get_user_by_id(user_id):
+    get_user_by_id(user_id):
 	    """Returns an editable dictionary like wrapper of a user by numeric id"""
 	    
-	get_user(user):
+    get_user(user):
 	    """
 	    Returns an editable dictionary like wrapper based on the attribute set in 'id_attr'
 	    """
 	  
-	create_connection_by_ids(user1, user2):
+    create_connection_by_ids(user1, user2):
 	    """Creates a 'friendship' between two users. Uses internal numeric ids"""
 	   
 
-	delete_connection_by_ids(user1, user2):
+    delete_connection_by_ids(user1, user2):
 	    """Deletes a 'friendship' between two users. Uses internal numeric ids"""
 	    
 
-	create_connection(user1, user2):
+    create_connection(user1, user2):
 	    """Creates a 'friendship' between two users, parameters are the values of the 'id_attr' set in 'create_user'"""
 	   
 	    
-	delete_connection(user1, user2):
+    delete_connection(user1, user2):
 	    """Deletes a 'friendship' between two users, parameters are the values of the 'id_attr' set in 'create_user'"""
 	  
-	get_friend_list(user):
+    get_friend_list(user):
 	    """Returns a list of the user's friends"""
  
-''''
+
 Followers and Following
 ----
 '''' python
