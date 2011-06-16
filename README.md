@@ -28,7 +28,7 @@ Setting up
 To use resn, import the module resn and add this to the beginning of the file.
     
     from resn import *
-    setup_system('default', host, port) # host and port of your redis server, default is localhost:6379
+    setup_system('default', host, port, **kwargs) # host and port of your redis server, default is localhost:6379, kwargs is optional for username/pass etc based on redis-py
 
 There are a couple of other settings you might want to change.
     
