@@ -150,7 +150,8 @@ Authentication
 
 Accessing Redis
 ====
-You can access redis by calling get_redis(), which returns redis-py 's Redis object through which you can use all redis commands in the form of
+You can access redis by calling get_redis(), which returns redis-py 's Redis object through which you can use all redis commands in the form of:
+
     get_redis().command(arguments)
 
 Future
