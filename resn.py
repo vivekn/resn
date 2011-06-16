@@ -159,7 +159,7 @@ def new_update(username, **update):
     friends = get_redis().sunion("users.%s.friends" % user, "users.%s.followers" % user)
     for friend in friends:
         get_redis().lpush("users.%s.feed" % friend, ctr)
-        get_redis().ltrim("users.%s.feed" % friend, 0, 1000) #TODO: Change hardcoded limit 1000 to a setting.
+        get_redis().ltrim("users.%s.feed" % friend, 0, resn_settings['Feed Size']) 
 
     get_redis().lpush("users.%s.updates" % user, ctr) #This is useful for maintaining a list of updates by a particular user
     
@@ -176,12 +176,12 @@ def get_updates_from_list(feed):
             newfeed.append(update)
     return newfeed
 
-def get_feed(username, limit = 1000):
+def get_feed(username, limit = resn_settings['Feed Size']):
     """Returns the feed containing updates by friends"""
     user = get_numeric_user_id(username)
     return get_updates_from_list(get_redis().lrange("users.%s.feed" % user, 0, limit))
 
-def get_user_updates(username, limit = 1000):
+def get_user_updates(username, limit = resn_settings['Feed Size']):
     """Returns a list of updates by the user. Useful for generating a user profile."""
     user = get_numeric_user_id(username)
     return get_updates_from_list(get_redis().lrange("users.%s.updates" % user, 0, limit))
@@ -211,7 +211,7 @@ def login_user(username):
     user = get_user(username)
     user['auth'] = token
     get_redis().set("auth.%s" % token, str(get_numeric_user_id(username)))
-    get_redis().expire("auth.%s" % token, 3600 * 72) #Token expires in 72 hours, TODO: Move to settings.
+    get_redis().expire("auth.%s" % token, resn_settings['Token Validity']) 
     return token
 
 def logout_user(username):
