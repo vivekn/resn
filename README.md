@@ -3,8 +3,8 @@ resn
 resn (REdis Social Network) is a simple library to create social networks. It provides a backend for data models using Redis, supporting friends, followers, updates and a news feed out of the box. You can use it with any web framework like Django, Flask, Pylons etc. For examples see the file **tests.py**. 
 
 Requires:
-*Latest version of [redis-py](http://github.com/andymccurdy/redis-py)
-*Latest version of [redis_wrap](http://github.com/amix/redis_wrap)
+* Latest version of [redis-py](http://github.com/andymccurdy/redis-py)
+* Latest version of [redis_wrap](http://github.com/amix/redis_wrap)
 
 Author: Vivek Narayanan <mail@vivekn.co.cc> 
 License: BSD, see LICENSE for more info.
