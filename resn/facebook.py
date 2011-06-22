@@ -43,9 +43,8 @@ def store_uid(username):
     uid = _get_uid(username)
     if uid:
         user = get_numeric_user_id(username)
-        _user = get_hash("users.%s" % user)
-        _user['facebook'] = uid
-        get_redis().set("facebook.%s" % uid, user)
+        get_redis().hsetnx("users.%s" % user, 'facebook', uid)
+        get_redis().setnx("facebook.%s" % uid, user)
         return True
     return False
     
